@@ -12,6 +12,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var database *mongo.Database
+
 func main() {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
@@ -20,7 +22,7 @@ func main() {
 	}
 	defer client.Disconnect(ctx)
 
-	database := client.Database("learning")
+	database = client.Database("learning")
 
 	instructorID, err := primitive.ObjectIDFromHex("5fec325018bec55548723b54")
 	batchID, err := primitive.ObjectIDFromHex("5ff37a95c8f63363476389f6")
@@ -30,7 +32,7 @@ func main() {
 	fmt.Println(UnenrollFromBatch(database, studentID, batchID))
 	fmt.Println(EnrollInBatch(database, studentID, batchID))
 
-	batchDetails, err := GetBatchDetails(database, studentID)
+	batchDetails, err := GetStudentBatchDetails(database, studentID)
 	fmt.Println(batchDetails)
 
 	studentList, err := GetStudentList(database, batchID)
@@ -42,4 +44,7 @@ func main() {
 	batches, _ := GetBatchList(database, instructorID)
 	fmt.Println(batches)
 
+	router := NewRouter()
+
+	log.Fatal(http.ListenAndServe(":8080", router))
 }

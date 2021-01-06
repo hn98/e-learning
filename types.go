@@ -42,3 +42,12 @@ type StudentDetail struct {
 	Batches      []primitive.ObjectID `bson:"batches,omitempty"`
 	BatchDetails []Batch              `bson:"batch_details,omitempty"`
 }
+
+type IDRequest struct {
+	ID string
+}
+
+type EnrollmentRequest struct {
+	studentID string
+	batchID   string
+}

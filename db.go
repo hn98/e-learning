@@ -85,7 +85,7 @@ func UnenrollFromBatch(db *mongo.Database, studentID primitive.ObjectID, batchID
 	return err
 }
 
-func GetBatchDetails(db *mongo.Database, id primitive.ObjectID) ([]Batch, error) {
+func GetStudentBatchDetails(db *mongo.Database, id primitive.ObjectID) ([]Batch, error) {
 	studentCollection := db.Collection("Students")
 
 	matchStage := bson.D{{"$match", bson.D{{"_id", id}}}}
@@ -101,6 +101,15 @@ func GetBatchDetails(db *mongo.Database, id primitive.ObjectID) ([]Batch, error)
 	}
 	// TODO check len
 	return showsLoaded[0].BatchDetails, nil
+}
+
+func GetBatchInfo(db *mongo.Database, id primitive.ObjectID) (Batch, error) {
+	var batch Batch
+
+	batchCollection := db.Collection("Batches")
+	err := batchCollection.FindOne(context.Background(), bson.M{"_id": id}).Decode(&batch)
+
+	return batch, err
 }
 
 func emptyCollection(c *mongo.Collection) (int64, error) {
