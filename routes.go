@@ -32,7 +32,7 @@ var instructorRoutes = Routes{
 	Route{
 		"UploadFile",
 		"POST",
-		"/instructor/upload",
+		"/upload",
 		UploadFile,
 	},
 }

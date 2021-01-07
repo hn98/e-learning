@@ -64,30 +64,6 @@ func HandleIDRequest(w http.ResponseWriter, r *http.Request) (primitive.ObjectID
 	return id, nil
 }
 
-func HandleEnrollmentRequest(w http.ResponseWriter, r *http.Request) (primitive.ObjectID, primitive.ObjectID, error) {
-	var request EnrollmentRequest
-
-	err := HandleRequest(w, r, &request)
-	if err != nil {
-		return primitive.ObjectID{}, primitive.ObjectID{}, err
-	}
-
-	studentID, err := primitive.ObjectIDFromHex(request.studentID)
-	if err != nil {
-		var resp = map[string]interface{}{"status": false, "message": err}
-		json.NewEncoder(w).Encode(resp)
-		return primitive.ObjectID{}, primitive.ObjectID{}, err
-	}
-	batchID, err := primitive.ObjectIDFromHex(request.batchID)
-	if err != nil {
-		var resp = map[string]interface{}{"status": false, "message": err}
-		json.NewEncoder(w).Encode(resp)
-		return primitive.ObjectID{}, primitive.ObjectID{}, err
-	}
-
-	return studentID, batchID, nil
-}
-
 func Respond(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
@@ -97,6 +73,14 @@ func Respond(w http.ResponseWriter, data interface{}) {
 	}
 }
 
+func getUserToken(r *http.Request) *Token {
+	tk := r.Context().Value("user")
+	if tk != nil {
+		return tk.(*Token)
+	}
+	panic("User token not found")
+}
+
 func ListStudents(w http.ResponseWriter, r *http.Request) {
 	id, _ := HandleIDRequest(w, r)
 	result, _ := GetStudentList(database, id)
@@ -104,7 +88,12 @@ func ListStudents(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListBatches(w http.ResponseWriter, r *http.Request) {
-	id, _ := HandleIDRequest(w, r)
+	tk := getUserToken(r)
+	log.Println("Request with token ", tk)
+	id, err := primitive.ObjectIDFromHex(tk.ID)
+	if err != nil {
+		panic(err)
+	}
 	result, _ := GetBatchList(database, id)
 	Respond(w, result)
 }
@@ -116,7 +105,10 @@ func Timeslot(w http.ResponseWriter, r *http.Request) {
 }
 
 func EnrollBatch(w http.ResponseWriter, r *http.Request) {
-	studentID, batchID, _ := HandleEnrollmentRequest(w, r)
+	tk := getUserToken(r)
+	log.Println("Request with token ", tk)
+	batchID, _ := HandleIDRequest(w, r)
+	studentID, _ := primitive.ObjectIDFromHex(tk.ID)
 	err := EnrollInBatch(database, studentID, batchID)
 
 	if err == nil {
@@ -125,7 +117,10 @@ func EnrollBatch(w http.ResponseWriter, r *http.Request) {
 }
 
 func UnenrollBatch(w http.ResponseWriter, r *http.Request) {
-	studentID, batchID, _ := HandleEnrollmentRequest(w, r)
+	tk := getUserToken(r)
+	log.Println("Request with token ", tk)
+	batchID, _ := HandleIDRequest(w, r)
+	studentID, _ := primitive.ObjectIDFromHex(tk.ID)
 	err := UnenrollFromBatch(database, studentID, batchID)
 
 	if err == nil {
@@ -134,7 +129,9 @@ func UnenrollBatch(w http.ResponseWriter, r *http.Request) {
 }
 
 func StudentBatchDetails(w http.ResponseWriter, r *http.Request) {
-	id, _ := HandleIDRequest(w, r)
+	tk := getUserToken(r)
+	log.Println("Request with token ", tk)
+	id, _ := primitive.ObjectIDFromHex(tk.ID)
 	result, _ := GetStudentBatchDetails(database, id)
 	Respond(w, result)
 }

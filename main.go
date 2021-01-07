@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
+	// "fmt"
 	"log"
 	"net/http"
 	"time"
 	// "errors"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	// "go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -27,19 +27,10 @@ func main() {
 	database = client.Database("learning")
 	filesDB = client.Database("myFiles")
 
-	// instructorID, err := primitive.ObjectIDFromHex("5fec325018bec55548723b54")
-	batchID, err := primitive.ObjectIDFromHex("5ff37a95c8f63363476389f6")
-	batchID2, err := primitive.ObjectIDFromHex("5ff37a95c8f63363476389f7")
-
 	// Reset stduent and instructor collection
-	insertSampleStudents(database)
-	insertSampleInstructors(database)
+	// insertSampleStudents(database)
+	// insertSampleInstructors(database)
 
-	studentList, err := GetStudentList(database, batchID)
-	fmt.Println(studentList)
-	studentList, err = GetStudentList(database, batchID2)
-	fmt.Println(studentList)
-	// res, _ := insertSampleStudents(database)
 
 	router := NewRouter()
 
