@@ -1,6 +1,9 @@
 package main
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	jwt "github.com/dgrijalva/jwt-go"
+)
 
 type Batch struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
@@ -12,6 +15,8 @@ type Batch struct {
 // Instructor represents the schema for the "Instructors" collection
 type Instructor struct {
 	ID            primitive.ObjectID   `bson:"_id,omitempty"`
+	Username	  string				`bson:"username,omitempty"`
+	Password      string	`bson:"password,omitempty"`
 	Name          string               `bson:"name,omitempty"`
 	Email         string               `bson:"email,omitempty"`
 	Qualificatiom []string             `bson:"qualifcations,omitempty"`
@@ -23,6 +28,8 @@ type Instructor struct {
 // Student represents the schema for the "Students" collection
 type Student struct {
 	ID       primitive.ObjectID   `bson:"_id,omitempty"`
+	Username	  string				`bson:"username,omitempty"`
+	Password      string	`bson:"password,omitempty"`
 	Name     string               `bson:"name,omitempty"`
 	Email    string               `bson:"email,omitempty"`
 	Std      string               `bson:"std,omitempty"`
@@ -50,4 +57,19 @@ type IDRequest struct {
 type EnrollmentRequest struct {
 	studentID string
 	batchID   string
+}
+
+type LoginRequest struct {
+	Username    string
+	Password 	string
+}
+
+type Token struct {
+	ID 	   string
+	Role   string
+	*jwt.StandardClaims
+}
+
+type Exception struct {
+	Message string `json:"message"`
 }

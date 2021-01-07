@@ -27,25 +27,19 @@ func main() {
 	database = client.Database("learning")
 	filesDB = client.Database("myFiles")
 
-	instructorID, err := primitive.ObjectIDFromHex("5fec325018bec55548723b54")
+	// instructorID, err := primitive.ObjectIDFromHex("5fec325018bec55548723b54")
 	batchID, err := primitive.ObjectIDFromHex("5ff37a95c8f63363476389f6")
 	batchID2, err := primitive.ObjectIDFromHex("5ff37a95c8f63363476389f7")
-	studentID, err := primitive.ObjectIDFromHex("5ff418a8341a9f45bf4dfbe7")
 
-	fmt.Println(UnenrollFromBatch(database, studentID, batchID))
-	fmt.Println(EnrollInBatch(database, studentID, batchID))
-
-	batchDetails, err := GetStudentBatchDetails(database, studentID)
-	fmt.Println(batchDetails)
+	// Reset stduent and instructor collection
+	insertSampleStudents(database)
+	insertSampleInstructors(database)
 
 	studentList, err := GetStudentList(database, batchID)
 	fmt.Println(studentList)
 	studentList, err = GetStudentList(database, batchID2)
 	fmt.Println(studentList)
 	// res, _ := insertSampleStudents(database)
-
-	batches, _ := GetBatchList(database, instructorID)
-	fmt.Println(batches)
 
 	router := NewRouter()
 

@@ -112,37 +112,4 @@ func GetBatchInfo(db *mongo.Database, id primitive.ObjectID) (Batch, error) {
 	return batch, err
 }
 
-func emptyCollection(c *mongo.Collection) (int64, error) {
-	deleteResult, err := c.DeleteMany(context.Background(), bson.D{{}})
-	if err != nil {
-		return 0, err
-	}
-	return deleteResult.DeletedCount, nil
-}
 
-func insertSampleStudents(db *mongo.Database) (*mongo.InsertManyResult, error) {
-	studentCollection := db.Collection("Students")
-
-	batchID, err := primitive.ObjectIDFromHex("5ff37a95c8f63363476389f6")
-	s1 := Student{
-		Name:     "Ayush Sharma",
-		Email:    "ayush.sharma@test.com",
-		Std:      "Sem 1-2",
-		Balance:  25000.0,
-		Location: "Delhi",
-		Batches:  []primitive.ObjectID{batchID},
-	}
-	s2 := Student{
-		Name:     "Rahul Singh",
-		Email:    "rahul.singh@test.com",
-		Std:      "Sem 1-2",
-		Balance:  22000.0,
-		Location: "Jaipur",
-		Batches:  []primitive.ObjectID{batchID},
-	}
-
-	studentList := []interface{}{s1, s2}
-
-	result, err := studentCollection.InsertMany(context.Background(), studentList)
-	return result, err
-}

@@ -11,46 +11,23 @@ type Route struct {
 
 type Routes []Route
 
-var routes = Routes{
+var instructorRoutes = Routes{
 	Route{
 		"ListBatches",
 		"POST",
-		"/instructor/listBatches",
+		"/listBatches",
 		ListBatches,
 	}, Route{
 		"ListStudents",
 		"POST",
-		"/instructor/listStudents",
+		"/listStudents",
 		ListStudents,
 	},
 	Route{
 		"Timeslot",
 		"POST",
-		"/instructor/timeslot",
+		"/timeslot",
 		Timeslot,
-	},
-	Route{
-		"EnrollBatch",
-		"POST",
-		"/student/enrollBatch",
-		EnrollBatch,
-	}, Route{
-		"UnenrollBatch",
-		"POST",
-		"/student/unenrollBatch",
-		UnenrollBatch,
-	},
-	Route{
-		"StudentBatchDetails",
-		"POST",
-		"/student/studentBatchDetails",
-		StudentBatchDetails,
-	},
-	Route{
-		"BatchInfo",
-		"POST",
-		"/student/batchInfo",
-		BatchInfo,
 	},
 	Route{
 		"UploadFile",
@@ -58,16 +35,49 @@ var routes = Routes{
 		"/instructor/upload",
 		UploadFile,
 	},
+}
+var studentRoutes = Routes{
+	Route{
+		"EnrollBatch",
+		"POST",
+		"/enrollBatch",
+		EnrollBatch,
+	}, Route{
+		"UnenrollBatch",
+		"POST",
+		"/unenrollBatch",
+		UnenrollBatch,
+	},
+	Route{
+		"StudentBatchDetails",
+		"POST",
+		"/studentBatchDetails",
+		StudentBatchDetails,
+	},
+	Route{
+		"BatchInfo",
+		"POST",
+		"/batchInfo",
+		BatchInfo,
+	},
 	Route{
 		"DownloadFile",
 		"GET",
-		"/instructor/download",
+		"/download",
 		DownloadFile,
 	},
+}
+var loginRoutes = Routes{
 	Route{
-		"Login",
+		"InstructorLogin",
 		"POST",
-		"/login",
-		Login,
+		"/login/instructor",
+		InstructorLogin,
+	},
+	Route{
+		"StudentLogin",
+		"POST",
+		"/login/student",
+		StudentLogin,
 	},
 }
