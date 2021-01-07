@@ -21,6 +21,15 @@ func GetTimeslot(db *mongo.Database, id primitive.ObjectID) (string, error) {
 	return batch.Timeslot, nil
 }
 
+func getInstructor(id primitive.ObjectID) (Instructor, error) {
+	var instructor Instructor
+
+	instructorCollection := database.Collection("Instructors")
+	err := instructorCollection.FindOne(context.Background(), bson.M{"_id": id}).Decode(&instructor)
+
+	return instructor, err
+}
+
 func GetBatchList(db *mongo.Database, id primitive.ObjectID) ([]primitive.ObjectID, error) {
 	var instructor Instructor
 
@@ -60,6 +69,18 @@ func GetStudentList(db *mongo.Database, id primitive.ObjectID) ([]Student, error
 	}
 
 	return studentList, nil
+}
+
+func AllotToBatch(db *mongo.Database, batchID primitive.ObjectID, assignment Assignment) error {
+	batchCollection := db.Collection("Batches")
+	_, err := batchCollection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": batchID},
+		bson.D{
+			{"$addToSet", bson.D{{"assignments", assignment}}},
+		},
+	)
+	return err
 }
 
 func EnrollInBatch(db *mongo.Database, studentID primitive.ObjectID, batchID primitive.ObjectID) error {
@@ -112,5 +133,3 @@ func GetBatchInfo(db *mongo.Database, id primitive.ObjectID) (Batch, error) {
 
 	return batch, err
 }
-
-

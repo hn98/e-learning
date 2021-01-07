@@ -24,7 +24,7 @@ func TodoShow(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Todo show:", todoId)
 }
 
-func HandleRequest(w http.ResponseWriter, r *http.Request, v interface{}) (error) {
+func HandleRequest(w http.ResponseWriter, r *http.Request, v interface{}) error {
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {
 		panic(err)
@@ -39,7 +39,7 @@ func HandleRequest(w http.ResponseWriter, r *http.Request, v interface{}) (error
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
 		}
-		return  err
+		return err
 	}
 
 	return nil
@@ -142,29 +142,31 @@ func BatchInfo(w http.ResponseWriter, r *http.Request) {
 	Respond(w, result)
 }
 
-
 func UploadFile(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("File Upload Endpoint Hit")
+	// tk := getUserToken(r)
+	// log.Println("Request with token ", tk)
+	// id, _ := primitive.ObjectIDFromHex(tk.ID)
+	// username := tk.Username
 
-    // Max upload size of 10 MB files.
-    r.ParseMultipartForm(10 << 20)
+	username := "Rajiv.Kumar"
+	id, _ := primitive.ObjectIDFromHex("5ff6eefed52c0086bc76a77a")
+	// Max upload size of 10 MB files.
+	r.ParseMultipartForm(10 << 20)
 
-    file, handler, err := r.FormFile("myFile")
-    if err != nil {
-        fmt.Println("Error Retrieving the File")
-        fmt.Println(err)
-        return
-    }
-    defer file.Close()
-    fmt.Printf("Uploaded File: %+v\n", handler.Filename)
-    fmt.Printf("File Size: %+v\n", handler.Size)
-	fmt.Printf("MIME Header: %+v\n", handler.Header)
+	file, handler, err := r.FormFile("myFile")
+	if err != nil {
+		log.Println("Error Retrieving the File")
+		log.Println(err)
+		return
+	}
+	defer file.Close()
+	log.Printf("Uploaded File: %+v\n", handler.Filename)
+	log.Printf("File Size: %+v\n", handler.Size)
+	log.Printf("MIME Header: %+v\n", handler.Header)
 
-	fmt.Println(handler.Header.Get("Content-Type"))
-
-    fileBytes, err := ioutil.ReadAll(file)
-    if err != nil {
-        fmt.Println(err)
+	fileBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Println(err)
 	}
 	bucket, err := gridfs.NewBucket(
 		filesDB,
@@ -174,20 +176,63 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uploadStream, err := bucket.OpenUploadStream(
-		handler.Filename, // this is the name of the file which will be saved in the database
+		username + handler.Filename, // this is the name of the file which will be saved in the database
 	)
 	if err != nil {
-        panic(err)
-    }
-    defer uploadStream.Close()
+		panic(err)
+	}
+	defer uploadStream.Close()
 
-    fileSize, err := uploadStream.Write(fileBytes)
-    if err != nil {
-        panic(err)
-    }
-    fmt.Printf("Write file to DB was successful. File size: %d \n", fileSize)
+	fileSize, err := uploadStream.Write(fileBytes)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Write file to DB was successful. File size: %d \n", fileSize)
 
-    fmt.Fprintf(w, "Successfully Uploaded File\n")
+	instructorCollection := database.Collection("Instructors")
+
+	_, _ = instructorCollection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": id},
+		bson.D{
+			{"$addToSet", bson.D{{"assignments", handler.Filename}}},
+		},
+	)
+
+	fmt.Fprintf(w, "Successfully Uploaded File\n")
+}
+
+func AllotAssignment(w http.ResponseWriter, r *http.Request) {
+	tk := getUserToken(r)
+	instructorID, _ := primitive.ObjectIDFromHex(tk.ID)
+	log.Println("Request with token ", tk)
+
+	var req AssignmentRequest
+	err := HandleRequest(w, r, &req)
+	if err != nil {
+		panic(err)
+	}
+
+	batchID, _ := primitive.ObjectIDFromHex(req.BatchID)
+	instructor, _ := getInstructor(instructorID)
+
+	if !(findString(instructor.Assignments, req.Filename)) {
+		json.NewEncoder(w).Encode(Exception{Message: "Can not find file with given name"})
+		return
+	}
+
+	assignment := Assignment{
+		Name:     req.Name,
+		Filename: tk.Username + req.Filename,
+		Deadline: req.Deadline,
+	}
+
+	if err := AllotToBatch(database, batchID, assignment); err != nil {
+		json.NewEncoder(w).Encode(Exception{Message: "Could not allot assignment"})
+		return
+	}
+
+	Respond(w, "Assignment alloted succcesfully")
 }
 
 func DownloadFile(w http.ResponseWriter, r *http.Request) {
@@ -203,7 +248,7 @@ func DownloadFile(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Results:")
 	fmt.Println(results)
 
-    bucket, _ := gridfs.NewBucket(
+	bucket, _ := gridfs.NewBucket(
 		filesDB,
 	)
 	var buf bytes.Buffer

@@ -35,6 +35,12 @@ var instructorRoutes = Routes{
 		"/upload",
 		UploadFile,
 	},
+	Route{
+		"AllotAssignment",
+		"POST",
+		"/allotAssignment",
+		AllotAssignment,
+	},
 }
 var studentRoutes = Routes{
 	Route{

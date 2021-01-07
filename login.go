@@ -14,12 +14,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
 func StudentLogin(w http.ResponseWriter, r *http.Request) {
 	var user LoginRequest
 	err := HandleRequest(w, r, &user)
 	if err != nil {
-		return 
+		return
 	}
 
 	resp := FindStudent(user.Username, user.Password)
@@ -46,8 +45,9 @@ func FindStudent(username, password string) map[string]interface{} {
 	}
 
 	tk := &Token{
-		ID: student.ID.Hex(),
-		Role: "Student",
+		ID:       student.ID.Hex(),
+		Username: student.Username,
+		Role:     "Student",
 		StandardClaims: &jwt.StandardClaims{
 			ExpiresAt: expiresAt,
 		},
@@ -69,7 +69,7 @@ func InstructorLogin(w http.ResponseWriter, r *http.Request) {
 	var user LoginRequest
 	err := HandleRequest(w, r, &user)
 	if err != nil {
-		return 
+		return
 	}
 
 	resp := FindInstructor(user.Username, user.Password)
@@ -96,8 +96,9 @@ func FindInstructor(username, password string) map[string]interface{} {
 	}
 
 	tk := &Token{
-		ID: instructor.ID.Hex(),
-		Role: "Instructor",
+		ID:       instructor.ID.Hex(),
+		Username: instructor.Username,
+		Role:     "Instructor",
 		StandardClaims: &jwt.StandardClaims{
 			ExpiresAt: expiresAt,
 		},
@@ -117,10 +118,15 @@ func FindInstructor(username, password string) map[string]interface{} {
 
 func JwtVerify(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		var header = r.Header.Get("x-access-token") //Grab the token from the header
 
 		header = strings.TrimSpace(header)
+
+		if header == "" {
+			header = r.Header.Get("Authorization")
+			splitToken := strings.Split(header, "Bearer ")
+			header = splitToken[1]
+		}
 
 		if header == "" {
 			//Token is missing, returns with error code 403 Unauthorized

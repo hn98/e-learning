@@ -15,7 +15,6 @@ import (
 var database *mongo.Database
 var filesDB *mongo.Database
 
-
 func main() {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
@@ -30,7 +29,6 @@ func main() {
 	// Reset stduent and instructor collection
 	// insertSampleStudents(database)
 	// insertSampleInstructors(database)
-
 
 	router := NewRouter()
 

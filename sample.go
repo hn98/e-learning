@@ -59,15 +59,15 @@ func insertSampleInstructors(db *mongo.Database) (*mongo.InsertOneResult, error)
 	batchID1, err := primitive.ObjectIDFromHex("5ff37a95c8f63363476389f6")
 	batchID2, err := primitive.ObjectIDFromHex("5ff37a95c8f63363476389f7")
 
-	batch_ids := []primitive.ObjectID {batchID1, batchID2}
+	batch_ids := []primitive.ObjectID{batchID1, batchID2}
 
 	i1 := Instructor{
 		Username: "Rajiv.Kumar",
 		Password: string(pass),
 		Name:     "Rajiv Kumar",
 		Email:    "rajiv.kumar@test.com",
-		Fees: 1210.0,
-		Batches: batch_ids,
+		Fees:     1210.0,
+		Batches:  batch_ids,
 	}
 
 	result, err := instructorCollection.InsertOne(context.Background(), i1)
