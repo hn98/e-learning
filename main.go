@@ -12,8 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var database *mongo.Database
-var filesDB *mongo.Database
+var dbClient *mongo.Client
 
 func main() {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -23,8 +22,7 @@ func main() {
 	}
 	defer client.Disconnect(ctx)
 
-	database = client.Database("learning")
-	filesDB = client.Database("myFiles")
+	dbClient = client
 
 	// Reset stduent and instructor collection
 	// insertSampleStudents(database)

@@ -30,7 +30,7 @@ func StudentLogin(w http.ResponseWriter, r *http.Request) {
 func FindStudent(username, password string) map[string]interface{} {
 	var student Student
 
-	studentCollection := database.Collection("Students")
+	studentCollection := dbClient.Database("learning").Collection("Students")
 	err := studentCollection.FindOne(context.Background(), bson.M{"username": username}).Decode(&student)
 	if err != nil {
 		var resp = map[string]interface{}{"status": false, "message": "Username not found"}
@@ -80,7 +80,7 @@ func InstructorLogin(w http.ResponseWriter, r *http.Request) {
 func FindInstructor(username, password string) map[string]interface{} {
 	var instructor Instructor
 
-	instructorCollection := database.Collection("Instructors")
+	instructorCollection := dbClient.Database("learning").Collection("Instructors")
 	err := instructorCollection.FindOne(context.Background(), bson.M{"username": username}).Decode(&instructor)
 
 	if err != nil {

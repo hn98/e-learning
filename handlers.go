@@ -18,7 +18,7 @@ import (
 
 func ListStudents(w http.ResponseWriter, r *http.Request) {
 	id, _ := HandleIDRequest(w, r)
-	result, _ := GetStudentList(database, id)
+	result, _ := GetStudentList(id)
 	Respond(w, result)
 }
 
@@ -29,13 +29,13 @@ func ListBatches(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	result, _ := GetBatchList(database, id)
+	result, _ := GetBatchList(id)
 	Respond(w, result)
 }
 
 func Timeslot(w http.ResponseWriter, r *http.Request) {
 	id, _ := HandleIDRequest(w, r)
-	result, _ := GetTimeslot(database, id)
+	result, _ := GetTimeslot(id)
 	Respond(w, result)
 }
 
@@ -44,7 +44,7 @@ func EnrollBatch(w http.ResponseWriter, r *http.Request) {
 	log.Println("Request with token ", tk)
 	batchID, _ := HandleIDRequest(w, r)
 	studentID, _ := primitive.ObjectIDFromHex(tk.ID)
-	err := EnrollInBatch(database, studentID, batchID)
+	err := EnrollInBatch(studentID, batchID)
 
 	if err == nil {
 		Respond(w, "Successfully enrolled")
@@ -56,7 +56,7 @@ func UnenrollBatch(w http.ResponseWriter, r *http.Request) {
 	log.Println("Request with token ", tk)
 	batchID, _ := HandleIDRequest(w, r)
 	studentID, _ := primitive.ObjectIDFromHex(tk.ID)
-	err := UnenrollFromBatch(database, studentID, batchID)
+	err := UnenrollFromBatch(studentID, batchID)
 
 	if err == nil {
 		Respond(w, "Successfully Unenrolled")
@@ -67,13 +67,13 @@ func StudentBatchDetails(w http.ResponseWriter, r *http.Request) {
 	tk := getUserToken(r)
 	log.Println("Request with token ", tk)
 	id, _ := primitive.ObjectIDFromHex(tk.ID)
-	result, _ := GetStudentBatchDetails(database, id)
+	result, _ := GetStudentBatchDetails(id)
 	Respond(w, result)
 }
 
 func BatchInfo(w http.ResponseWriter, r *http.Request) {
 	id, _ := HandleIDRequest(w, r)
-	result, _ := GetBatchInfo(database, id)
+	result, _ := GetBatchInfo(id)
 	Respond(w, result)
 }
 
@@ -105,7 +105,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	bucket, err := gridfs.NewBucket(
-		filesDB,
+		dbClient.Database("myFiles"),
 	)
 	if err != nil {
 		panic(err)
@@ -125,7 +125,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Printf("Write file to DB was successful. File size: %d \n", fileSize)
 
-	instructorCollection := database.Collection("Instructors")
+	instructorCollection := dbClient.Database("learning").Collection("Instructors")
 
 	_, _ = instructorCollection.UpdateOne(
 		context.Background(),
@@ -163,7 +163,7 @@ func AllotAssignment(w http.ResponseWriter, r *http.Request) {
 		Deadline: req.Deadline,
 	}
 
-	if err := AllotToBatch(database, batchID, assignment); err != nil {
+	if err := AllotToBatch(batchID, assignment); err != nil {
 		json.NewEncoder(w).Encode(Exception{Message: "Could not allot assignment"})
 		return
 	}
@@ -175,7 +175,7 @@ func FindExamDetails(w http.ResponseWriter, r *http.Request) {
 	tk := getUserToken(r)
 	log.Println("Request with token ", tk)
 	id, _ := primitive.ObjectIDFromHex(tk.ID)
-	batches, _ := GetStudentBatchDetails(database, id)
+	batches, _ := GetStudentBatchDetails(id)
 
 	var assignments []Assignment
 
@@ -191,6 +191,7 @@ func DownloadFile(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	filesDB := dbClient.Database("myFiles")
 	fsFiles := filesDB.Collection("fs.files")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	var results bson.M
