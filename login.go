@@ -17,6 +17,8 @@ import (
 func StudentLogin(w http.ResponseWriter, r *http.Request) {
 	var user LoginRequest
 	err := HandleRequest(w, r, &user)
+	fmt.Println(user)
+
 	if err != nil {
 		return
 	}
@@ -30,7 +32,6 @@ func FindStudent(username, password string) map[string]interface{} {
 
 	studentCollection := database.Collection("Students")
 	err := studentCollection.FindOne(context.Background(), bson.M{"username": username}).Decode(&student)
-
 	if err != nil {
 		var resp = map[string]interface{}{"status": false, "message": "Username not found"}
 		return resp

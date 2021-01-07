@@ -5,81 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
 	"time"
 
-	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
 )
-
-func TodoShow(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	todoId := vars["todoId"]
-	fmt.Fprintln(w, "Todo show:", todoId)
-}
-
-func HandleRequest(w http.ResponseWriter, r *http.Request, v interface{}) error {
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
-	if err != nil {
-		panic(err)
-	}
-	if err := r.Body.Close(); err != nil {
-		panic(err)
-	}
-
-	if err := json.Unmarshal(body, v); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(422) // unprocessable entity
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
-		return err
-	}
-
-	return nil
-}
-
-func HandleIDRequest(w http.ResponseWriter, r *http.Request) (primitive.ObjectID, error) {
-	var request IDRequest
-
-	err := HandleRequest(w, r, &request)
-	if err != nil {
-		return primitive.ObjectID{}, err
-	}
-
-	id, err := primitive.ObjectIDFromHex(request.ID)
-
-	if err != nil {
-		var resp = map[string]interface{}{"status": false, "message": err}
-		json.NewEncoder(w).Encode(resp)
-		return primitive.ObjectID{}, err
-	}
-
-	return id, nil
-}
-
-func Respond(w http.ResponseWriter, data interface{}) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		panic(err)
-	}
-}
-
-func getUserToken(r *http.Request) *Token {
-	tk := r.Context().Value("user")
-	if tk != nil {
-		return tk.(*Token)
-	}
-	panic("User token not found")
-}
 
 func ListStudents(w http.ResponseWriter, r *http.Request) {
 	id, _ := HandleIDRequest(w, r)
@@ -143,13 +78,14 @@ func BatchInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 func UploadFile(w http.ResponseWriter, r *http.Request) {
-	// tk := getUserToken(r)
-	// log.Println("Request with token ", tk)
-	// id, _ := primitive.ObjectIDFromHex(tk.ID)
-	// username := tk.Username
+	tk := getUserToken(r)
+	log.Println("Request with token ", tk)
+	id, _ := primitive.ObjectIDFromHex(tk.ID)
+	username := tk.Username
 
-	username := "Rajiv.Kumar"
-	id, _ := primitive.ObjectIDFromHex("5ff6eefed52c0086bc76a77a")
+	// TEST
+	// username := "Rajiv.Kumar"
+	// id, _ := primitive.ObjectIDFromHex("5ff6eefed52c0086bc76a77a")
 	// Max upload size of 10 MB files.
 	r.ParseMultipartForm(10 << 20)
 
@@ -235,30 +171,48 @@ func AllotAssignment(w http.ResponseWriter, r *http.Request) {
 	Respond(w, "Assignment alloted succcesfully")
 }
 
+func FindExamDetails(w http.ResponseWriter, r *http.Request) {
+	tk := getUserToken(r)
+	log.Println("Request with token ", tk)
+	id, _ := primitive.ObjectIDFromHex(tk.ID)
+	batches, _ := GetStudentBatchDetails(database, id)
+
+	var assignments []Assignment
+
+	for _, batch := range batches {
+		assignments = append(assignments, batch.Assignments...)
+	}
+	Respond(w, assignments)
+}
+
 func DownloadFile(w http.ResponseWriter, r *http.Request) {
-	fileName := "testfile"
+	var req DownloadRequest
+	if err := HandleRequest(w, r, &req); err != nil {
+		panic(err)
+	}
+
 	fsFiles := filesDB.Collection("fs.files")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	var results bson.M
-	err := fsFiles.FindOne(ctx, bson.M{}).Decode(&results)
-	if err != nil {
-		log.Fatal(err)
+	if err := fsFiles.FindOne(ctx, bson.M{"filename": req.Filename}).Decode(&results); err != nil {
+		json.NewEncoder(w).Encode(Exception{Message: "Can not find file with given name"})
+		return
 	}
-	// you can print out the result
-	fmt.Println("Results:")
-	fmt.Println(results)
+
+	fmt.Println("Result ", results)
 
 	bucket, _ := gridfs.NewBucket(
 		filesDB,
 	)
 	var buf bytes.Buffer
-	dStream, err := bucket.DownloadToStreamByName(fileName, &buf)
+	dStream, err := bucket.DownloadToStreamByName(req.Filename, &buf)
 	if err != nil {
-		log.Fatal(err)
+		json.NewEncoder(w).Encode(Exception{Message: "Download failed"})
+		return
 	}
 	fmt.Printf("File size to download: %v \n", dStream)
 
-	cd := mime.FormatMediaType("attachment", map[string]string{"filename": fileName})
+	cd := mime.FormatMediaType("attachment", map[string]string{"filename": req.Filename})
 	w.Header().Set("Content-Disposition", cd)
 	w.Header().Set("Content-Type", "application/pdf")
 

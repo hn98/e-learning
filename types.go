@@ -68,6 +68,10 @@ type AssignmentRequest struct {
 	BatchID  string
 }
 
+type DownloadRequest struct {
+	Filename string
+}
+
 type LoginRequest struct {
 	Username string
 	Password string

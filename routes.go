@@ -67,8 +67,14 @@ var studentRoutes = Routes{
 		BatchInfo,
 	},
 	Route{
+		"FindExamDetails",
+		"POST",
+		"/findExamDetails",
+		FindExamDetails,
+	},
+	Route{
 		"DownloadFile",
-		"GET",
+		"POST",
 		"/download",
 		DownloadFile,
 	},
