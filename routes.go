@@ -53,6 +53,18 @@ var routes = Routes{
 		BatchInfo,
 	},
 	Route{
+		"UploadFile",
+		"POST",
+		"/instructor/upload",
+		UploadFile,
+	},
+	Route{
+		"DownloadFile",
+		"GET",
+		"/instructor/download",
+		DownloadFile,
+	},
+	Route{
 		"Login",
 		"POST",
 		"/login",

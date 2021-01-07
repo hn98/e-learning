@@ -13,6 +13,8 @@ import (
 )
 
 var database *mongo.Database
+var filesDB *mongo.Database
+
 
 func main() {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -23,6 +25,7 @@ func main() {
 	defer client.Disconnect(ctx)
 
 	database = client.Database("learning")
+	filesDB = client.Database("myFiles")
 
 	instructorID, err := primitive.ObjectIDFromHex("5fec325018bec55548723b54")
 	batchID, err := primitive.ObjectIDFromHex("5ff37a95c8f63363476389f6")
