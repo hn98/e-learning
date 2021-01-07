@@ -8,10 +8,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func GetTimeslot(db *mongo.Database, id primitive.ObjectID) (string, error) {
+func GetTimeslot(id primitive.ObjectID) (string, error) {
 	var batch Batch
 
-	batchCollection := db.Collection("Batches")
+	batchCollection := dbClient.Database("learning").Collection("Batches")
 	err := batchCollection.FindOne(context.Background(), bson.M{"_id": id}).Decode(&batch)
 
 	if err != nil {
@@ -24,16 +24,16 @@ func GetTimeslot(db *mongo.Database, id primitive.ObjectID) (string, error) {
 func getInstructor(id primitive.ObjectID) (Instructor, error) {
 	var instructor Instructor
 
-	instructorCollection := database.Collection("Instructors")
+	instructorCollection := dbClient.Database("learning").Collection("Instructors")
 	err := instructorCollection.FindOne(context.Background(), bson.M{"_id": id}).Decode(&instructor)
 
 	return instructor, err
 }
 
-func GetBatchList(db *mongo.Database, id primitive.ObjectID) ([]primitive.ObjectID, error) {
+func GetBatchList(id primitive.ObjectID) ([]primitive.ObjectID, error) {
 	var instructor Instructor
 
-	instructorCollection := db.Collection("Instructors")
+	instructorCollection := dbClient.Database("learning").Collection("Instructors")
 	err := instructorCollection.FindOne(context.Background(), bson.M{"_id": id}).Decode(&instructor)
 
 	if err != nil {
@@ -43,21 +43,29 @@ func GetBatchList(db *mongo.Database, id primitive.ObjectID) ([]primitive.Object
 	return instructor.Batches, nil
 }
 
-func UpdateInstructorInfo(db *mongo.Database, instructor Instructor) error {
-	instructorCollection := db.Collection("Instructors")
+func UpdateInstructorInfo(id primitive.ObjectID, req InstructorProfileRequest) error {
+	instructorCollection := dbClient.Database("learning").Collection("Instructors")
 
-	_, err := instructorCollection.ReplaceOne(
+	_, err := instructorCollection.UpdateOne(
 		context.Background(),
-		bson.M{"_id": instructor.ID},
-		instructor,
+		bson.M{"_id": id},
+		bson.D{
+			{"$set", bson.D{
+				{"name", req.Name},
+				{"email", req.Email},
+				{"qualification", req.Qualification},
+				{"experience", req.Experience},
+				{"fees", req.Fees},
+			}},
+		},
 	)
 
 	return err
 }
 
-func GetStudentList(db *mongo.Database, id primitive.ObjectID) ([]Student, error) {
+func GetStudentList(id primitive.ObjectID) ([]Student, error) {
 	var studentList []Student
-	studentCollection := db.Collection("Students")
+	studentCollection := dbClient.Database("learning").Collection("Students")
 	cursor, err := studentCollection.Find(context.Background(), bson.M{"batches": id})
 	if err != nil {
 		return nil, err
@@ -71,8 +79,26 @@ func GetStudentList(db *mongo.Database, id primitive.ObjectID) ([]Student, error
 	return studentList, nil
 }
 
-func AllotToBatch(db *mongo.Database, batchID primitive.ObjectID, assignment Assignment) error {
-	batchCollection := db.Collection("Batches")
+func UpdateStudentInfo(id primitive.ObjectID, req StudentProfileRequest) error {
+	studentCollection := dbClient.Database("learning").Collection("Students")
+
+	_, err := studentCollection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": id},
+		bson.D{
+			{"$set", bson.D{
+				{"name", req.Name},
+				{"email", req.Email},
+				{"location", req.Location},
+			}},
+		},
+	)
+
+	return err
+}
+
+func AllotToBatch(batchID primitive.ObjectID, assignment Assignment) error {
+	batchCollection := dbClient.Database("learning").Collection("Batches")
 	_, err := batchCollection.UpdateOne(
 		context.Background(),
 		bson.M{"_id": batchID},
@@ -83,8 +109,8 @@ func AllotToBatch(db *mongo.Database, batchID primitive.ObjectID, assignment Ass
 	return err
 }
 
-func EnrollInBatch(db *mongo.Database, studentID primitive.ObjectID, batchID primitive.ObjectID) error {
-	studentCollection := db.Collection("Students")
+func EnrollInBatch(studentID primitive.ObjectID, batchID primitive.ObjectID) error {
+	studentCollection := dbClient.Database("learning").Collection("Students")
 	_, err := studentCollection.UpdateOne(
 		context.Background(),
 		bson.M{"_id": studentID},
@@ -95,8 +121,8 @@ func EnrollInBatch(db *mongo.Database, studentID primitive.ObjectID, batchID pri
 	return err
 }
 
-func UnenrollFromBatch(db *mongo.Database, studentID primitive.ObjectID, batchID primitive.ObjectID) error {
-	studentCollection := db.Collection("Students")
+func UnenrollFromBatch(studentID primitive.ObjectID, batchID primitive.ObjectID) error {
+	studentCollection := dbClient.Database("learning").Collection("Students")
 	_, err := studentCollection.UpdateOne(
 		context.Background(),
 		bson.M{"_id": studentID},
@@ -107,8 +133,8 @@ func UnenrollFromBatch(db *mongo.Database, studentID primitive.ObjectID, batchID
 	return err
 }
 
-func GetStudentBatchDetails(db *mongo.Database, id primitive.ObjectID) ([]Batch, error) {
-	studentCollection := db.Collection("Students")
+func GetStudentBatchDetails(id primitive.ObjectID) ([]Batch, error) {
+	studentCollection := dbClient.Database("learning").Collection("Students")
 
 	matchStage := bson.D{{"$match", bson.D{{"_id", id}}}}
 	lookupStage := bson.D{{"$lookup", bson.D{{"from", "Batches"}, {"localField", "batches"}, {"foreignField", "_id"}, {"as", "batch_details"}}}}
@@ -125,10 +151,10 @@ func GetStudentBatchDetails(db *mongo.Database, id primitive.ObjectID) ([]Batch,
 	return showsLoaded[0].BatchDetails, nil
 }
 
-func GetBatchInfo(db *mongo.Database, id primitive.ObjectID) (Batch, error) {
+func GetBatchInfo(id primitive.ObjectID) (Batch, error) {
 	var batch Batch
 
-	batchCollection := db.Collection("Batches")
+	batchCollection := dbClient.Database("learning").Collection("Batches")
 	err := batchCollection.FindOne(context.Background(), bson.M{"_id": id}).Decode(&batch)
 
 	return batch, err

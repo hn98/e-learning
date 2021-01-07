@@ -25,7 +25,7 @@ type Instructor struct {
 	Password      string               `bson:"password,omitempty"`
 	Name          string               `bson:"name,omitempty"`
 	Email         string               `bson:"email,omitempty"`
-	Qualificatiom []string             `bson:"qualifcations,omitempty"`
+	Qualification []string             `bson:"qualifcations,omitempty"`
 	Experience    []string             `bson:"experience,omitempty"`
 	Fees          float64              `bson:"fees,omitempty"`
 	Assignments   []string             `bson:"assignments,omitempty"`
@@ -75,6 +75,20 @@ type DownloadRequest struct {
 type LoginRequest struct {
 	Username string
 	Password string
+}
+
+type InstructorProfileRequest struct {
+	Name          string
+	Email         string
+	Qualification []string
+	Experience    []string
+	Fees          float64
+}
+
+type StudentProfileRequest struct {
+	Name     string
+	Email    string
+	Location string
 }
 
 type Token struct {

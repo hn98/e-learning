@@ -16,6 +16,24 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
 )
 
+func UpdateInstructorProfile(w http.ResponseWriter, r *http.Request) {
+	tk := getUserToken(r)
+	log.Println("Request with token ", tk)
+	id, _ := primitive.ObjectIDFromHex(tk.ID)
+
+	var req InstructorProfileRequest
+
+	if err := HandleRequest(w, r, &req); err != nil {
+		panic(err)
+	}
+
+	if err := UpdateInstructorInfo(id, req); err != nil {
+		json.NewEncoder(w).Encode(Exception{Message: "Profile update failed"})
+		return
+	}
+	Respond(w, "Profile updated successfully")
+}
+
 func ListStudents(w http.ResponseWriter, r *http.Request) {
 	id, _ := HandleIDRequest(w, r)
 	result, _ := GetStudentList(id)
@@ -37,6 +55,24 @@ func Timeslot(w http.ResponseWriter, r *http.Request) {
 	id, _ := HandleIDRequest(w, r)
 	result, _ := GetTimeslot(id)
 	Respond(w, result)
+}
+
+func UpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
+	tk := getUserToken(r)
+	log.Println("Request with token ", tk)
+	id, _ := primitive.ObjectIDFromHex(tk.ID)
+
+	var req StudentProfileRequest
+
+	if err := HandleRequest(w, r, &req); err != nil {
+		panic(err)
+	}
+
+	if err := UpdateStudentInfo(id, req); err != nil {
+		json.NewEncoder(w).Encode(Exception{Message: "Profile update failed"})
+		return
+	}
+	Respond(w, "Profile updated successfully")
 }
 
 func EnrollBatch(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +159,6 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Write file to DB was successful. File size: %d \n", fileSize)
 
 	instructorCollection := dbClient.Database("learning").Collection("Instructors")
 
@@ -200,7 +235,7 @@ func DownloadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Result ", results)
+	log.Println("Result ", results)
 
 	bucket, _ := gridfs.NewBucket(
 		filesDB,
@@ -211,12 +246,10 @@ func DownloadFile(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Exception{Message: "Download failed"})
 		return
 	}
-	fmt.Printf("File size to download: %v \n", dStream)
 
 	cd := mime.FormatMediaType("attachment", map[string]string{"filename": req.Filename})
 	w.Header().Set("Content-Disposition", cd)
 	w.Header().Set("Content-Type", "application/pdf")
 
 	len, err := buf.WriteTo(w)
-	fmt.Println(len)
 }

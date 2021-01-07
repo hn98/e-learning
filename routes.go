@@ -13,11 +13,18 @@ type Routes []Route
 
 var instructorRoutes = Routes{
 	Route{
+		"UpdateInstructorProfile",
+		"POST",
+		"/updateProfile",
+		UpdateInstructorProfile,
+	},
+	Route{
 		"ListBatches",
 		"POST",
 		"/listBatches",
 		ListBatches,
-	}, Route{
+	},
+	Route{
 		"ListStudents",
 		"POST",
 		"/listStudents",
@@ -44,11 +51,18 @@ var instructorRoutes = Routes{
 }
 var studentRoutes = Routes{
 	Route{
+		"UpdateStudentProfile",
+		"POST",
+		"/updateProfile",
+		UpdateStudentProfile,
+	},
+	Route{
 		"EnrollBatch",
 		"POST",
 		"/enrollBatch",
 		EnrollBatch,
-	}, Route{
+	},
+	Route{
 		"UnenrollBatch",
 		"POST",
 		"/unenrollBatch",
