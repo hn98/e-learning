@@ -159,6 +159,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("Write file to DB was successful. File size: %d \n", fileSize)
 
 	instructorCollection := dbClient.Database("learning").Collection("Instructors")
 
@@ -169,8 +170,6 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 			{"$addToSet", bson.D{{"assignments", handler.Filename}}},
 		},
 	)
-
-	fmt.Fprintf(w, "Successfully Uploaded File\n")
 }
 
 func AllotAssignment(w http.ResponseWriter, r *http.Request) {
@@ -241,7 +240,7 @@ func DownloadFile(w http.ResponseWriter, r *http.Request) {
 		filesDB,
 	)
 	var buf bytes.Buffer
-	dStream, err := bucket.DownloadToStreamByName(req.Filename, &buf)
+	_, err := bucket.DownloadToStreamByName(req.Filename, &buf)
 	if err != nil {
 		json.NewEncoder(w).Encode(Exception{Message: "Download failed"})
 		return
@@ -252,4 +251,5 @@ func DownloadFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/pdf")
 
 	len, err := buf.WriteTo(w)
+	fmt.Println(len)
 }
